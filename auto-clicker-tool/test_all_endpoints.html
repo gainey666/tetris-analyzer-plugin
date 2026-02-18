@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auto-Clicker Endpoint Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+        .pending { background-color: #fff3cd; }
+        button { padding: 5px 10px; margin: 5px; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Auto-Clicker Endpoint Auditor</h1>
+    <p>Testing all endpoints on http://localhost:3001</p>
+    
+    <button onclick="runAllTests()">🧪 Run All Tests</button>
+    <button onclick="clearResults()">🗑️ Clear Results</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        const baseURL = 'http://localhost:3001';
+        
+        async function testEndpoint(method, path, body = null) {
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            
+            try {
+                const response = await fetch(baseURL + path, options);
+                const data = await response.text();
+                
+                return {
+                    method,
+                    path,
+                    status: response.status,
+                    success: response.ok,
+                    data: data,
+                    headers: Object.fromEntries(response.headers.entries())
+                };
+            } catch (error) {
+                return {
+                    method,
+                    path,
+                    status: 0,
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+        
+        function displayResult(result) {
+            const resultsDiv = document.getElementById('results');
+            const testDiv = document.createElement('div');
+            testDiv.className = `test ${result.success ? 'success' : 'error'}`;
+            
+            let content = `<h3>${result.method} ${result.path}</h3>`;
+            content += `<p>Status: ${result.status} - ${result.success ? '✅ SUCCESS' : '❌ FAILED'}</p>`;
+            
+            if (result.error) {
+                content += `<p>Error: ${result.error}</p>`;
+            } else if (result.data) {
+                content += `<p>Response:</p><pre>${result.data}</pre>`;
+            }
+            
+            testDiv.innerHTML = content;
+            resultsDiv.appendChild(testDiv);
+        }
+        
+        async function runAllTests() {
+            clearResults();
+            
+            const tests = [
+                // Health endpoint
+                { method: 'GET', path: '/health' },
+                
+                // Auto-clicker endpoints
+                { method: 'GET', path: '/api/auto-clicker/status' },
+                { method: 'POST', path: '/api/auto-clicker/start', body: {
+                    area: { x: 0, y: 0, width: 800, height: 600 },
+                    click: { button: 'left', clickType: 'single' },
+                    interval: 1000
+                }},
+                { method: 'POST', path: '/api/auto-clicker/stop' },
+                
+                // Test click endpoint
+                { method: 'POST', path: '/api/test-click', body: { x: 100, y: 100 } },
+                
+                // Root endpoint
+                { method: 'GET', path: '/' },
+                
+                // Invalid endpoint (should 404)
+                { method: 'GET', path: '/invalid-endpoint' }
+            ];
+            
+            for (const test of tests) {
+                const result = await testEndpoint(test.method, test.path, test.body);
+                displayResult(result);
+                await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
+            }
+            
+            // Generate summary
+            const allResults = document.querySelectorAll('.test');
+            const total = allResults.length;
+            const successful = document.querySelectorAll('.success').length;
+            const failed = total - successful;
+            
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'test';
+            summaryDiv.innerHTML = `
+                <h2>📊 AUDIT SUMMARY</h2>
+                <p>Total endpoints tested: ${total}</p>
+                <p>✅ Successful: ${successful}</p>
+                <p>❌ Failed: ${failed}</p>
+                <p>📈 Success rate: ${((successful / total) * 100).toFixed(1)}%</p>
+            `;
+            document.getElementById('results').appendChild(summaryDiv);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>
