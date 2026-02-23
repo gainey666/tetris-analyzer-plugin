@@ -1,0 +1,8 @@
+Please test these file operations:
+1. List files in: C:\Users\imme\CascadeProjects
+2. Read the file: C:\Users\imme\CascadeProjects\package.json
+3. Create a new file: C:\Users\imme\CascadeProjects\temp\continue-test.txt with content "MCP Test Successful"
+4. Read it back to confirm
+
+Show results for each step.
+

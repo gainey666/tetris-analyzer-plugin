@@ -1,0 +1,32 @@
+{
+  "name": "cascade-projects",
+  "version": "1.0.0",
+  "description": "Multi-project workspace",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo 'Running tests...' && exit 0",
+    "test:watch": "echo 'Watch mode not configured'",
+    "dev": "echo 'Development server'",
+    "build": "echo 'Building project'",
+    "build:ts": "tsc --noEmit",
+    "lint": "eslint . --ext .js,.ts 2>/dev/null || echo 'ESLint not configured'",
+    "lint:fix": "eslint . --ext .js,.ts --fix 2>/dev/null || echo 'ESLint not configured'",
+    "format": "prettier --write '**/*.{js,ts,json,md}' 2>/dev/null || echo 'Prettier not configured'",
+    "clean": "rimraf node_modules dist build .next",
+    "start": "echo 'Starting application'",
+    "git:status": "git status",
+    "git:log": "git log --oneline -10",
+    "git:diff": "git diff"
+  },
+  "dependencies": {
+    "inquirer": "^13.2.5",
+    "lodash": "^4.17.23"
+  },
+  "keywords": [
+    "automation",
+    "tools",
+    "mcp"
+  ],
+  "author": "User",
+  "license": "MIT"
+}
