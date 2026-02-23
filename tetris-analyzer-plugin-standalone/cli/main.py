@@ -28,6 +28,16 @@ from coaching.coaching_module import CoachingModule
 from utils.performance import PerformanceMonitor
 from utils.frame_types import BoardCalibration
 
+# Runtime Hub imports
+try:
+    from runtime_hub.integration_interface import TetrisAnalyzerRuntimeHub, RuntimeHubConfig
+    RUNTIME_HUB_AVAILABLE = True
+except ImportError:
+    RUNTIME_HUB_AVAILABLE = False
+
+# CLI utilities
+from cli.utilities import add_cli_utility_commands, handle_cli_utility_command
+
 
 class TetrisAnalyzerCLI:
     """Command-line interface for Tetris analyzer"""
@@ -41,6 +51,10 @@ class TetrisAnalyzerCLI:
         self.prediction_engine: Optional[PredictionEngine] = None
         self.coaching_module: Optional[CoachingModule] = None
         self.performance_monitor: Optional[PerformanceMonitor] = None
+        
+        # Runtime Hub integration
+        self.runtime_hub_integration: Optional[TetrisAnalyzerRuntimeHub] = None
+        self.runtime_hub_mode = False
         
         self.running = False
         self.verbose = False
@@ -365,6 +379,86 @@ class TetrisAnalyzerCLI:
             print(f"Calibration saved to {calib_file}")
         except Exception as e:
             print(f"Failed to save calibration: {e}")
+    
+    def start_runtime_hub_mode(self) -> bool:
+        """Start analyzer in Runtime Hub integration mode"""
+        if not RUNTIME_HUB_AVAILABLE:
+            print("Error: Runtime Hub integration not available")
+            return False
+        
+        try:
+            print("Starting Tetris Analyzer in Runtime Hub mode...")
+            
+            # Create Runtime Hub integration
+            config = RuntimeHubConfig(
+                auto_start=True,
+                auto_restart=True,
+                coaching_enabled=self.show_coaching,
+                prediction_enabled=self.show_predictions,
+                performance_monitoring=True
+            )
+            
+            self.runtime_hub_integration = TetrisAnalyzerRuntimeHub(config)
+            
+            # Setup callbacks
+            self.runtime_hub_integration.on_status_changed = self._on_hub_status_changed
+            self.runtime_hub_integration.on_board_detected = self._on_hub_board_detected
+            self.runtime_hub_integration.on_coaching_hint = self._on_hub_coaching_hint
+            self.runtime_hub_integration.on_error = self._on_hub_error
+            
+            # Initialize integration
+            if not self.runtime_hub_integration.initialize():
+                print("Failed to initialize Runtime Hub integration")
+                return False
+            
+            print("Runtime Hub integration initialized")
+            print("Analyzer is ready for Runtime Hub control")
+            print("Press Ctrl+C to stop")
+            
+            # Keep running until interrupted
+            self.running = True
+            while self.running:
+                try:
+                    time.sleep(1)
+                    
+                    # Print status periodically
+                    if self.verbose and int(time.time()) % 10 == 0:
+                        status = self.runtime_hub_integration.get_status()
+                        print(f"Status: {'Running' if status.is_running else 'Stopped'}, "
+                              f"Board: {'Detected' if status.board_detected else 'Not detected'}, "
+                              f"FPS: {status.current_fps:.1f}")
+                
+                except KeyboardInterrupt:
+                    break
+            
+            # Shutdown
+            self.runtime_hub_integration.shutdown()
+            print("Runtime Hub mode stopped")
+            return True
+            
+        except Exception as e:
+            print(f"Runtime Hub mode error: {e}")
+            return False
+    
+    def _on_hub_status_changed(self, status):
+        """Handle Runtime Hub status change"""
+        if self.verbose:
+            print(f"Hub status: {'Running' if status.is_running else 'Stopped'}")
+    
+    def _on_hub_board_detected(self, board_data):
+        """Handle Runtime Hub board detection"""
+        if self.verbose:
+            print(f"Hub board detected: {len(board_data.get('board', []))} pieces")
+    
+    def _on_hub_coaching_hint(self, hint_data):
+        """Handle Runtime Hub coaching hint"""
+        if self.verbose:
+            message = hint_data.get('message', 'No message')
+            print(f"Hub coaching: {message}")
+    
+    def _on_hub_error(self, error_type, error):
+        """Handle Runtime Hub error"""
+        print(f"Hub error [{error_type}]: {error}")
 
 
 def main():
@@ -376,8 +470,25 @@ def main():
     parser.add_argument("--no-coaching", action="store_true", help="Disable coaching hints")
     parser.add_argument("--no-predictions", action="store_true", help="Disable move predictions")
     parser.add_argument("--stats-interval", type=float, default=5.0, help="Statistics display interval (seconds)")
+    parser.add_argument("--runtime-hub", action="store_true", help="Run in Runtime Hub integration mode")
+    parser.add_argument("--demo", action="store_true", help="Run Runtime Hub demo")
+    
+    # Add utility commands
+    add_cli_utility_commands(parser)
     
     args = parser.parse_args()
+    
+    # Handle utility commands first
+    if hasattr(args, 'utility') and args.utility:
+        handle_cli_utility_command(args)
+        return
+    
+    # Check Runtime Hub availability
+    if args.runtime_hub or args.demo:
+        if not RUNTIME_HUB_AVAILABLE:
+            print("Error: Runtime Hub integration not available")
+            print("Please ensure runtime_hub module is properly installed")
+            sys.exit(1)
     
     # Create and initialize analyzer
     analyzer = TetrisAnalyzerCLI()
@@ -386,6 +497,7 @@ def main():
     analyzer.verbose = args.verbose
     analyzer.show_coaching = not args.no_coaching
     analyzer.show_predictions = not args.no_predictions
+    analyzer.runtime_hub_mode = args.runtime_hub
     analyzer.stats_interval = args.stats_interval
     
     # Initialize
@@ -394,12 +506,22 @@ def main():
         sys.exit(1)
     
     # Run calibration or start analysis
-    if args.calibrate:
+    if args.demo:
+        # Run Runtime Hub demo
+        from runtime_hub.demo import RuntimeHubDemo
+        demo = RuntimeHubDemo()
+        demo.start_demo()
+        success = True
+    elif args.calibrate:
         success = analyzer.calibrate()
         sys.exit(0 if success else 1)
     else:
-        analyzer.start()
-        sys.exit(0)
+        # Start analysis (standalone or Runtime Hub mode)
+        if args.runtime_hub:
+            success = analyzer.start_runtime_hub_mode()
+        else:
+            success = analyzer.start()
+        sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,286 @@
+{
+  "name": "🎮 Tetris Analyzer",
+  "category": "Python",
+  "description": "Real-time Tetris game analysis with move predictions and coaching hints",
+  "version": "1.0.0",
+  "author": "Tetris Analyzer Team",
+  "icon": "🎮",
+  
+  "fields": {
+    "mode": {
+      "type": "select",
+      "label": "Analysis Mode",
+      "options": [
+        {"value": "standalone", "label": "Standalone Mode"},
+        {"value": "runtime_hub", "label": "Runtime Hub Mode"}
+      ],
+      "default": "runtime_hub",
+      "required": true,
+      "description": "Choose how the analyzer should run"
+    },
+    
+    "calibration": {
+      "type": "button",
+      "label": "🎯 Run Calibration",
+      "action": "calibrate",
+      "description": "Detect and calibrate the Tetris game board"
+    },
+    
+    "coaching": {
+      "type": "checkbox",
+      "label": "💡 Enable Coaching",
+      "default": true,
+      "description": "Show coaching hints and strategy suggestions"
+    },
+    
+    "predictions": {
+      "type": "checkbox", 
+      "label": "🔮 Enable Predictions",
+      "default": true,
+      "description": "Generate move predictions and suggestions"
+    },
+    
+    "performance_monitoring": {
+      "type": "checkbox",
+      "label": "📊 Performance Monitoring",
+      "default": true,
+      "description": "Track FPS, accuracy, and latency metrics"
+    },
+    
+    "stats_interval": {
+      "type": "number",
+      "label": "Stats Interval (ms)",
+      "default": 5000,
+      "min": 1000,
+      "max": 60000,
+      "step": 1000,
+      "required": false,
+      "description": "How often to update performance statistics"
+    },
+    
+    "confidence_threshold": {
+      "type": "number",
+      "label": "Confidence Threshold",
+      "default": 0.6,
+      "min": 0.1,
+      "max": 1.0,
+      "step": 0.1,
+      "required": false,
+      "description": "Minimum confidence for move predictions"
+    },
+    
+    "max_suggestions": {
+      "type": "number",
+      "label": "Max Suggestions",
+      "default": 3,
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "required": false,
+      "description": "Maximum number of move suggestions to show"
+    },
+    
+    "verbose": {
+      "type": "checkbox",
+      "label": "📝 Verbose Logging",
+      "default": false,
+      "description": "Enable detailed logging output"
+    }
+  },
+  
+  "inputs": {
+    "trigger": {
+      "type": "trigger",
+      "label": "Start Analysis",
+      "description": "Trigger to start Tetris analysis"
+    }
+  },
+  
+  "outputs": {
+    "board_state": {
+      "type": "object",
+      "label": "Board State",
+      "description": "Current Tetris board state with pieces"
+    },
+    
+    "coaching_hints": {
+      "type": "array",
+      "label": "Coaching Hints", 
+      "description": "Array of coaching hints and suggestions"
+    },
+    
+    "move_predictions": {
+      "type": "array",
+      "label": "Move Predictions",
+      "description": "Suggested moves with confidence scores"
+    },
+    
+    "performance_metrics": {
+      "type": "object",
+      "label": "Performance Metrics",
+      "description": "FPS, accuracy, latency, and other metrics"
+    },
+    
+    "status": {
+      "type": "object",
+      "label": "Analyzer Status",
+      "description": "Current analyzer status and health"
+    }
+  },
+  
+  "settings": {
+    "auto_start": {
+      "type": "checkbox",
+      "label": "Auto Start",
+      "default": false,
+      "description": "Automatically start analysis when workflow begins"
+    },
+    
+    "auto_restart": {
+      "type": "checkbox", 
+      "label": "Auto Restart",
+      "default": true,
+      "description": "Automatically restart analyzer if it crashes"
+    },
+    
+    "timeout": {
+      "type": "number",
+      "label": "Timeout (seconds)",
+      "default": 30,
+      "min": 5,
+      "max": 300,
+      "step": 5,
+      "description": "Maximum time to wait for operations"
+    }
+  },
+  
+  "api": {
+    "base_url": "http://localhost:3002",
+    "endpoints": {
+      "start": "POST /start",
+      "stop": "POST /stop", 
+      "status": "GET /status",
+      "board": "GET /board",
+      "hints": "GET /hints",
+      "performance": "GET /performance",
+      "config": "GET/POST /config",
+      "calibrate": "POST /calibrate",
+      "health": "GET /health"
+    }
+  },
+  
+  "events": {
+    "socket_events": [
+      "board_update",
+      "coaching_hint", 
+      "performance_update",
+      "status_changed",
+      "error"
+    ],
+    
+    "http_events": [
+      "analysis_started",
+      "analysis_stopped",
+      "calibration_completed",
+      "config_updated"
+    ]
+  },
+  
+  "requirements": {
+    "python": ">=3.8",
+    "dependencies": [
+      "opencv-python>=4.8.0",
+      "numpy>=1.21.0",
+      "pyautogui>=0.9.54",
+      "psutil>=5.8.0",
+      "flask>=2.0.0",
+      "flask-cors>=3.0.0",
+      "socket.io-client>=5.0.0"
+    ],
+    "platforms": ["Windows", "Linux", "macOS"],
+    "permissions": [
+      "screen_capture",
+      "file_system",
+      "network_access"
+    ]
+  },
+  
+  "examples": {
+    "basic_usage": {
+      "name": "Basic Tetris Analysis",
+      "description": "Start Tetris analyzer with default settings",
+      "fields": {
+        "mode": "runtime_hub",
+        "coaching": true,
+        "predictions": true,
+        "performance_monitoring": true
+      }
+    },
+    
+    "high_performance": {
+      "name": "High Performance Mode",
+      "description": "Optimized for maximum FPS and minimal latency",
+      "fields": {
+        "mode": "runtime_hub",
+        "coaching": false,
+        "predictions": true,
+        "performance_monitoring": false,
+        "stats_interval": 10000,
+        "confidence_threshold": 0.8
+      }
+    },
+    
+    "coaching_focus": {
+      "name": "Coaching Focus Mode",
+      "description": "Emphasize coaching hints and learning",
+      "fields": {
+        "mode": "runtime_hub",
+        "coaching": true,
+        "predictions": true,
+        "performance_monitoring": true,
+        "stats_interval": 3000,
+        "confidence_threshold": 0.5,
+        "max_suggestions": 5,
+        "verbose": true
+      }
+    }
+  },
+  
+  "troubleshooting": {
+    "common_issues": [
+      {
+        "issue": "Board not detected",
+        "solution": "Run calibration and ensure Tetris window is visible"
+      },
+      {
+        "issue": "Low FPS", 
+        "solution": "Disable performance monitoring and increase stats interval"
+      },
+      {
+        "issue": "No coaching hints",
+        "solution": "Ensure coaching is enabled and board is properly detected"
+      }
+    ],
+    
+    "error_codes": {
+      "E001": "Failed to initialize screen capture",
+      "E002": "Board detection failed",
+      "E003": "Piece recognition error",
+      "E004": "Prediction engine error",
+      "E005": "Coaching module error"
+    }
+  },
+  
+  "changelog": {
+    "1.0.0": {
+      "date": "2026-02-22",
+      "changes": [
+        "Initial Runtime Hub integration",
+        "Socket.IO client support",
+        "HTTP API server",
+        "Full coaching and prediction features",
+        "Performance monitoring"
+      ]
+    }
+  }
+}

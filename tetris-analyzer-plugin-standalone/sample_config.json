@@ -1,0 +1,65 @@
+{
+  "capture": {
+    "fps": 30,
+    "quality": "high",
+    "monitor": 0,
+    "region": null
+  },
+  "detection": {
+    "method": "edges",
+    "threshold": 0.8,
+    "min_board_size": [
+      200,
+      400
+    ],
+    "max_board_size": [
+      400,
+      800
+    ],
+    "edge_threshold1": 50,
+    "edge_threshold2": 150
+  },
+  "recognition": {
+    "template_threshold": 0.8,
+    "color_tolerance": 0.2,
+    "min_confidence": 0.6,
+    "use_color_heuristics": true,
+    "use_template_matching": true
+  },
+  "prediction": {
+    "max_suggestions": 5,
+    "confidence_threshold": 0.6,
+    "lookahead_depth": 3,
+    "weights": {
+      "score": 1.0,
+      "lines": 2.0,
+      "height": 1.5,
+      "holes": 2.0
+    }
+  },
+  "coaching": {
+    "enabled": true,
+    "max_hints": 5,
+    "hint_lifetime": 10000,
+    "confidence_threshold": 0.6,
+    "enable_move_suggestions": true,
+    "enable_danger_warnings": true,
+    "enable_strategy_tips": true,
+    "urgency_filter": "medium"
+  },
+  "display": {
+    "verbose": false,
+    "show_predictions": true,
+    "show_coaching": true,
+    "show_statistics": true,
+    "stats_interval": 5.0,
+    "log_level": "INFO"
+  },
+  "performance": {
+    "max_cpu_usage": 80.0,
+    "max_memory_usage": 512,
+    "enable_threading": true,
+    "enable_profiling": false,
+    "frame_skip_threshold": 2
+  }
+}
